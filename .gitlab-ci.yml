@@ -1,0 +1,52 @@
+image: node:6.0
+
+stages:
+  - test
+  - package
+  - publish
+
+cache:
+  key: "default"
+  paths:
+    - node_modules/
+
+before_script:
+  - npm install
+  - npm prune
+
+test:
+  stage: test
+  script:
+    - npm run test
+
+build:
+  stage: package
+  script:
+    - npm run build
+
+pack:
+  stage: package
+  script:
+    - npm run build
+    - npm run pack
+  artifacts:
+    when: on_success
+    paths:
+      - wuffy-*.tgz
+  only:
+    - master
+    - beta
+
+publish_master:
+  stage: publish
+  script:
+    - echo "Upload to wuffy main"
+  only:
+    - master
+
+publish_beta:
+  stage: publish
+  script:
+    - echo "Upload to wuffy beta"
+  only:
+    - beta
