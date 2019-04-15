@@ -1,6 +1,6 @@
 import { Message, Client, Permissions } from 'discord.js';
 import { Wuffy } from '../wuffy';
-import { Database } from '../database/database';
+import { Database, DbUser, DbGuild } from '../database/database';
 
 export interface CommandExecutor {
     (execution: CommandExecution): void;
@@ -8,6 +8,8 @@ export interface CommandExecutor {
 
 export interface CommandExecution {
     client: Wuffy;
+    user: DbUser;
+    guild: DbGuild;
     database: Database;
     message: Message;
     args: string[];

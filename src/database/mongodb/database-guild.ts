@@ -1,47 +1,71 @@
 import mongoose from 'mongoose';
 import { DbGuild } from '../database';
+import { IMongoDBGuild } from './database-mongodb';
 
-export const mongodbGuildChema = new mongoose.Schema({
-    name: String
+const mongodbGuildChema = new mongoose.Schema({
+    _id: {
+        type: Number,
+        required: true
+    },
+    locale: {
+        type: Number,
+        default: 0
+    },
+    coins: {
+        type: Number,
+        default: 0
+    }
 });
-/*
-export const DBGuildModule = mongoose.model('guild', new mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
-    name: {
-        type: String,
-        required: true,
-        match: '[a-Z]',
-        default: 'Hallo'
-    }
-}));
-*/
 
-export class DBMongoGuild implements DbGuild {
+const methods: DbGuild = {
+    /* Basic */
+    loadData() { },
+    saveData() {
+        this.save({
+            validateBeforeSave: true
+        }, (err: any, product: IMongoDBGuild) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.debug('Database saved guild: ' + product.getId());
+            }
+        });
+    },
+    getId() {
+        return this._id;
+    },
 
-    constructor(mongoose: any) {
-    }
+    /* Locale */
+    getLocale() {
+        return this.locale;
+    },
+    setLocale(locale: number) {
+        this.locale = locale;
+    },
 
-    getLocale(guildId: string): string {
-        return '';
-    }
+    /* Coins */
+    getCoins() {
+        return this.coins;
+    },
+    setCoins(coins: number) {
+        this.coins = coins;
+    },
+    addCoins(coins: number) {
+        this.coins += coins;
+    },
+    removeCoins(coins: number) {
+        this.coins -= coins;
 
-    setLocale(guildId: string, locale: string): void {
-    }
+        if (this.coins < 0) {
+            this.coins = 0;
+        }
+    },
+    canRemoveCoins(coins: number) {
+        const diff = this.coins - coins;
 
-    getCoins(guildId: string, userId: number): number {
-        return 0;
+        return diff < 0 ? diff : 0;
     }
+};
+mongodbGuildChema.methods = methods;
 
-    setCoins(guildId: string, userId: number, coins: number): void {
-    }
-
-    addCoins(guildId: string, userId: number, coins: number): void {
-    }
-
-    removeCoins(guildId: string, userId: number, coins: number): void {
-    }
-
-    canRemoveCoins(guildId: string, userId: number, coins: number): number {
-        return 0;
-    }
-}
+export const MongoDBGuild = mongoose.model('guild', mongodbGuildChema, 'guild');

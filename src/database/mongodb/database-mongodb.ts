@@ -1,53 +1,47 @@
 import { Collection } from 'mongodb';
-import mongoose, { Connection, Mongoose } from 'mongoose';
+import mongoose, { Connection, Mongoose, mongo } from 'mongoose';
 import { ConfigDatabase, ConfigDatabaseMongoDB } from '../../../config';
 import { PercentEncodingUtil } from '../../util/percent-encoding-util';
-import { Database } from '../database';
-import { mongodbGuildChema } from './database-guild';
-import { mongodbUserChema } from './database-user';
-import cron = require('node-cron');
+import { Database, DbGuild, DbUser } from '../database';
+import { MongoDBGuild } from './database-guild';
+import { MongoDBUser } from './database-user';
 
-export enum DatabaseMongoDBTypes {
-    USER = 'user',
-    GUILD = 'guild'
-}
+export interface IMongoDBGuild extends DbGuild, mongoose.Document { }
+export interface IMongoDBUser extends DbUser, mongoose.Document { }
 
 export class DbMongoDB implements Database {
     protected settings: ConfigDatabaseMongoDB;
 
     protected mongoose: Mongoose = mongoose;
-    protected connection: mongoose.Connection;
+
+    protected userCache = new Map<string, IMongoDBUser>();
+    protected guildCache = new Map<string, IMongoDBGuild>();
 
     async connect(config: ConfigDatabase) {
         this.settings = config.settings as ConfigDatabaseMongoDB;
 
         console.info('Database: Connecting to database...');
-        this.connection = (await this.mongoose.connect(this.settings.usingURL ?
+        await this.mongoose.connect(this.settings.usingURL ?
             this.settings.url : `mongodb://${PercentEncodingUtil.encode(this.settings.username)}:${PercentEncodingUtil.encode(this.settings.password)}@${this.settings.address}:${this.settings.port}/${PercentEncodingUtil.encode(this.settings.database)}`,
             {
                 useNewUrlParser: true,
                 autoReconnect: true,
                 mongos: true,
-            })).connection;
+            });
 
-        if (this.connection.readyState != 1) {
+        if (this.mongoose.connection.readyState != 1) {
             throw '!!! Database is not connected !!!';
         }
-
-        const Guild = this.connection.model('guild', mongodbGuildChema, DatabaseMongoDBTypes.GUILD);
-        const User = mongoose.model('user', mongodbUserChema, DatabaseMongoDBTypes.USER);
-
-        const user = new User({ name: 'fluffy' });
-        console.info(user.collection.collectionName);
-        console.info(user);
-        user.save((err: any, product: mongoose.Document) => {
-            console.log('TEST ' + err + ' - ' + product);
-        });
     }
 
     async disconnect() {
         await this.mongoose.connection.close();
+        await this.mongoose.disconnect();
         console.log('Database: Disconnected');
+    }
+
+    isConnected() {
+        return this.mongoose.connection.readyState == 1;
     }
 
     getMongoose(): Mongoose {
@@ -55,10 +49,40 @@ export class DbMongoDB implements Database {
     }
 
     getConnection(): Connection {
-        return this.connection;
+        return this.mongoose.connection;
     }
 
-    getCollection(type: DatabaseMongoDBTypes): Collection {
-        return this.connection.collection(type);
+    getCollection(collectionName: string): Collection {
+        return this.mongoose.connection.collection(collectionName);
+    }
+
+    async getGuild(id: string) {
+        if (this.guildCache.has(id)) {
+            return this.guildCache.get(id);
+        }
+
+        let guild = await MongoDBGuild.findById(parseInt(id)) as IMongoDBGuild;
+
+        if (!guild) {
+            guild = new MongoDBGuild({ _id: parseInt(id) }) as IMongoDBGuild;
+        }
+
+        this.guildCache.set(id, guild);
+        return guild;
+    }
+
+    async getUser(id: string) {
+        if (this.userCache.has(id)) {
+            return this.userCache.get(id);
+        }
+
+        let user = await MongoDBUser.findById(parseInt(id)) as IMongoDBUser;
+
+        if (!user) {
+            user = new MongoDBUser({ _id: parseInt(id) }) as IMongoDBUser;
+        }
+
+        this.userCache.set(id, user);
+        return user;
     }
 }

@@ -1,4 +1,5 @@
 import { ConfigDatabase } from '../../config';
+import mongoose from 'mongoose';
 
 export interface DatabaseConnect { }
 export interface DatabaseDisconnect { }
@@ -7,11 +8,29 @@ export interface Database {
     connect(config: ConfigDatabase): void;
     disconnect(): void;
 
-    // getUser(id: string): DbUser;
-    // getGuild(): DbGuild;
+    isConnected(): boolean;
+
+    getUser(id: string): Promise<DbUser>;
+    getGuild(id: string): Promise<DbGuild>;
 }
 
-export interface DbBase { }
+export interface DbBase {
+    /**
+     * Load the data from database
+     */
+    loadData(): void;
+
+    /**
+     * Save the data into the database
+     */
+    saveData(): void;
+
+    /**
+     * Return the currently id
+     * @returns ID
+     */
+    getId(): string;
+}
 
 export interface DbUser extends DbBase {
     /**
@@ -35,14 +54,14 @@ export interface DbGuild extends DbBase {
      * @param guildId GuildId
      * @returns Guild locale as string
      */
-    getLocale(guildId: string): string;
+    getLocale(): number;
 
     /**
      * Set the guild locale
      * @param guildId GuildId
      * @param locale Locale as string
      */
-    setLocale(guildId: string, locale: string): void;
+    setLocale(locale: number): void;
 
     /**
      * Return user coins
@@ -50,7 +69,7 @@ export interface DbGuild extends DbBase {
      * @param userId  UserId
      * @returns user coins
      */
-    getCoins(guildId: string, userId: number): number;
+    getCoins(userId: number): number;
 
     /**
      * Set user coins
@@ -58,7 +77,7 @@ export interface DbGuild extends DbBase {
      * @param userId  UserId
      * @param coins Coins
      */
-    setCoins(guildId: string, userId: number, coins: number): void;
+    setCoins(userId: number, coins: number): void;
 
     /**
      * Add user coins
@@ -66,7 +85,7 @@ export interface DbGuild extends DbBase {
      * @param userId  UserId
      * @param coins Coins
      */
-    addCoins(guildId: string, userId: number, coins: number): void;
+    addCoins(userId: number, coins: number): void;
 
     /**
      * Remove user coins
@@ -74,7 +93,7 @@ export interface DbGuild extends DbBase {
      * @param userId  UserId
      * @param coins Coins
      */
-    removeCoins(guildId: string, userId: number, coins: number): void;
+    removeCoins(userId: number, coins: number): void;
 
     /**
      * Return 0 when has enough coins or returning a higher number with the ammount what needed
@@ -83,5 +102,5 @@ export interface DbGuild extends DbBase {
      * @param coins Coins
      * @returns 0 when has enough coins or returning a higher number with the ammount what needed
      */
-    canRemoveCoins(guildId: string, userId: number, coins: number): number;
+    canRemoveCoins(userId: number, coins: number): number;
 }

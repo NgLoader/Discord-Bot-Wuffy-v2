@@ -1,4 +1,4 @@
-import { Message, Permissions, PermissionResolvable } from 'discord.js';
+import { Message, Permissions, PermissionResolvable, Guild } from 'discord.js';
 import { Wuffy } from '../wuffy';
 import { MessageUtil } from '../util/message-util';
 import { PermissionUtil } from '../util/permission-util';
@@ -14,6 +14,8 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
         const args: string[] = message.content.split(/\s+/);
 
         if (args.length < 0) return;
+
+        if (!this.database.isConnected()) return;
 
         let alias: string = args.shift();
 
@@ -44,6 +46,7 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
 
         try {
             const command = this.commands.get(alias);
+            const user = await this.database.getUser(message.author.id);
 
             if (isGuild) {
                 const missing: number[] = channelPermission.missing(command.guildPermission) as number[];
@@ -55,10 +58,17 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
                     return;
                 }
 
+                const guild = await this.database.getGuild(message.guild.id);
+
                 // TODO check user permission (own permission system)
+                command.execute({ client: this, user, guild, database: this.database, message, args });
+
+                guild.saveData();
+            } else {
+                command.execute({ client: this, user, guild: undefined, database: this.database, message, args });
             }
 
-            command.execute({ client: this, database: this.database, message, args });
+            user.saveData();
         } catch (error) {
             console.error(error);
             message.reply('There was an error by executing that command!');

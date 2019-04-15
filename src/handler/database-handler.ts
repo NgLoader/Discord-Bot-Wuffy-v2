@@ -5,7 +5,7 @@ interface DatabaseHandler {
     (this: Wuffy): void;
 }
 
-export const databaseHandler: DatabaseHandler = async function(this: Wuffy) {
+export const databaseHandler: DatabaseHandler = function(this: Wuffy) {
     console.log(this.config);
     switch (this.config.database.type.toLowerCase()) {
         case 'mongo':
@@ -19,7 +19,7 @@ export const databaseHandler: DatabaseHandler = async function(this: Wuffy) {
     }
 
     try {
-        await this.database.connect(this.config.database);
+        this.database.connect(this.config.database);
         console.info('Connected to database');
     } catch (error) {
         console.error(error);
