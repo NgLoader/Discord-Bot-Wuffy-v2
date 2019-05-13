@@ -1,20 +1,25 @@
 import { Collection } from 'mongodb';
-import mongoose, { Connection, Mongoose, mongo } from 'mongoose';
-import { ConfigDatabase, ConfigDatabaseMongoDB } from '../../../config';
-import { PercentEncodingUtil } from '../../util/percent-encoding-util';
-import { Database, DbGuild, DbUser } from '../database';
+import mongoose, { Connection, Mongoose } from 'mongoose';
+import { ConfigDatabase, ConfigDatabaseMongoDB } from '../../../../config';
+import { PercentEncodingUtil } from '../../../util/percent-encoding-util';
+import { Database } from '../../database';
+import { DbGuild } from '../../database-guild';
+import { DbLanguage } from '../../database-language';
+import { DbUser } from '../../database-user';
 import { MongoDBGuild } from './database-guild';
+import { MongoDBLanguage } from './database-language';
 import { MongoDBUser } from './database-user';
+import { LanguageEnum } from '../../../util/language-enum';
 
 export interface IMongoDBGuild extends DbGuild, mongoose.Document { }
 export interface IMongoDBUser extends DbUser, mongoose.Document { }
+export interface IMongoDBLanguage extends DbLanguage, mongoose.Document { }
 
 export class DbMongoDB implements Database {
     protected settings: ConfigDatabaseMongoDB;
 
     protected mongoose: Mongoose = mongoose;
 
-    protected userCache = new Map<string, IMongoDBUser>();
     protected guildCache = new Map<string, IMongoDBGuild>();
 
     async connect(config: ConfigDatabase) {
@@ -26,7 +31,7 @@ export class DbMongoDB implements Database {
             {
                 useNewUrlParser: true,
                 autoReconnect: true,
-                mongos: true,
+                mongos: true
             });
 
         if (this.mongoose.connection.readyState != 1) {
@@ -62,27 +67,23 @@ export class DbMongoDB implements Database {
         }
 
         let guild = await MongoDBGuild.findById(parseInt(id)) as IMongoDBGuild;
-
-        if (!guild) {
-            guild = new MongoDBGuild({ _id: parseInt(id) }) as IMongoDBGuild;
-        }
+        if (!guild) guild = new MongoDBGuild({ _id: parseInt(id) }) as IMongoDBGuild;
 
         this.guildCache.set(id, guild);
         return guild;
     }
 
     async getUser(id: string) {
-        if (this.userCache.has(id)) {
-            return this.userCache.get(id);
-        }
-
         let user = await MongoDBUser.findById(parseInt(id)) as IMongoDBUser;
+        if (!user) user = new MongoDBUser({ _id: parseInt(id) }) as IMongoDBUser;
 
-        if (!user) {
-            user = new MongoDBUser({ _id: parseInt(id) }) as IMongoDBUser;
-        }
-
-        this.userCache.set(id, user);
         return user;
+    }
+
+    async getLanguage(id: LanguageEnum) {
+        let language = await MongoDBLanguage.findById(id) as IMongoDBLanguage;
+        if (!language) language = new MongoDBLanguage({ _id: id }) as IMongoDBLanguage;
+
+        return language;
     }
 }

@@ -1,5 +1,6 @@
+import fs from 'fs';
 import { Client } from 'discord.js';
-import { config, Config } from '../config';
+import { Config } from '../config';
 import { Command } from './commands/command';
 import { Database } from './database/database';
 import { commandHandler } from './handler/command-handler';
@@ -8,7 +9,7 @@ import { eventHandler } from './handler/event-handler';
 
 export class Wuffy extends Client {
     protected commands = new Map<string, Command>();
-    protected database: Database;
+    public database: Database;
     protected config: Config;
 
     /**
@@ -37,7 +38,4 @@ export class Wuffy extends Client {
     }
 }
 
-if (process.argv.includes('--typescript')) {
-    new Wuffy(require('../config-private').config);
-} else
-    new Wuffy(config);
+new Wuffy(JSON.parse(fs.readFileSync('./config.json') as unknown as string));

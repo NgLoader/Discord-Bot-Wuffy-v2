@@ -2,6 +2,9 @@ import { Message, Permissions, PermissionResolvable, Guild } from 'discord.js';
 import { Wuffy } from '../wuffy';
 import { MessageUtil } from '../util/message-util';
 import { PermissionUtil } from '../util/permission-util';
+import { WuffyRoleEnum } from '../util/role-enum';
+import { DbMeta } from '../database/database';
+import { LanguageEnum } from '../util/language-enum';
 
 interface MessageListener {
     (this: Wuffy, message: Message): void;
@@ -32,6 +35,12 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
 
         const isGuild = message.guild !== null;
         const channelPermission = isGuild ? message.guild.me.permissionsIn(message.channel) : undefined;
+        const meta = new DbMeta(this, this.database, message.author, await this.database.getUser(message.author.id));
+
+        if (isGuild) meta.setGuild(message.guild).setDbGuild(await this.database.getGuild(message.guild.id));
+        meta.loadLanguage();
+
+        (message as any).meta = meta;
 
         if (!this.commands.has(alias)) {
             if (isGuild) {
@@ -46,7 +55,6 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
 
         try {
             const command = this.commands.get(alias);
-            const user = await this.database.getUser(message.author.id);
 
             if (isGuild) {
                 const missing: number[] = channelPermission.missing(command.guildPermission) as number[];
@@ -55,23 +63,30 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
                     const names = await PermissionUtil.getNames(missing);
 
                     MessageUtil.reply(message, `I need the following permission to execute this command!\n${names.join(', ')}`);
-                    return;
+                    return meta.destroy();
                 }
 
-                const guild = await this.database.getGuild(message.guild.id);
+                if (!meta.dbUser.hasRole(...command.requiredRole)) {
+                    MessageUtil.reply(message, `You need the following rank to execute this command!\n${command.requiredRole.join(', ')}`);
+                    return meta.destroy();
+                }
 
-                // TODO check user permission (own permission system)
-                command.execute({ client: this, user, guild, database: this.database, message, args });
-
-                guild.saveData();
-            } else {
-                command.execute({ client: this, user, guild: undefined, database: this.database, message, args });
+                if (!meta.dbGuild.hasPermission(message.guild, meta.dbUser, message.channel.id, true, ...command.userPermission)) {
+                    MessageUtil.reply(message, `You need the following user permission to execute this command!\n${command.userPermission.join(', ')}`);
+                    return meta.destroy();
+                }
+            } else if (command.onlyGuild) {
+                MessageUtil.reply(message, `This command is only in a guild avavible!`);
+                return meta.destroy();
             }
 
-            user.saveData();
+            command.execute({ client: this, meta: meta, message, args });
+            meta.finish();
         } catch (error) {
             console.error(error);
             message.reply('There was an error by executing that command!');
+
+            if (meta) meta.destroy();
         }
     } catch (error) {
         console.error(error);

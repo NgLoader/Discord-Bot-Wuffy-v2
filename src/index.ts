@@ -1,17 +1,11 @@
 import { ShardingManager } from 'discord.js';
-import { Config } from '../config';
-
-const dev = process.argv.includes('--typescript'); // TODO Find a better way...
+import fs from 'fs';
 
 const options: any = {
-    token: (dev ? require('../config-private') : require('../config')).config.token
+    token: (JSON.parse(fs.readFileSync('./config.json') as unknown as string)).token
 };
 
-if (dev) {
-    options.execArgv = [ '-r', 'ts-node/register' ];
-}
-
-const shardManager = new ShardingManager('src/wuffy.ts', options);
+const shardManager = new ShardingManager('wuffy.js', options);
 
 shardManager.spawn();
 shardManager.on('launch', shard => console.log(`Starting shard: ${shard.id}`));

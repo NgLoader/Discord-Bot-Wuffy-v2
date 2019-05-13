@@ -1,14 +1,13 @@
 import { GuildMember, Permissions, Collection, Guild } from 'discord.js';
 import { Command, CommandExecution } from './command';
 import { MessageUtil } from '../util/message-util';
-import { UserPermissions } from '../permission/user-permissions';
+import { UserPermissions } from '../util/permission-enum';
 
 export const command: Command = {
     name: 'Kick',
     aliases: [ 'kick' ],
-    admin: false,
-    beta: false,
     onlyGuild: true,
+    requiredRole: [ ],
     guildPermission: [ Permissions.FLAGS.SEND_MESSAGES, Permissions.FLAGS.KICK_MEMBERS ],
     userPermission: [ UserPermissions.COMMAND_KICK ],
 

@@ -1,6 +1,8 @@
-import { Message, Client, Permissions } from 'discord.js';
+import { Message } from 'discord.js';
+import { UserPermissions } from '../util/permission-enum';
+import { DbMeta } from '../database/database';
 import { Wuffy } from '../wuffy';
-import { Database, DbUser, DbGuild } from '../database/database';
+import { WuffyRoleEnum } from '../util/role-enum';
 
 export interface CommandExecutor {
     (execution: CommandExecution): void;
@@ -8,9 +10,7 @@ export interface CommandExecutor {
 
 export interface CommandExecution {
     client: Wuffy;
-    user: DbUser;
-    guild: DbGuild;
-    database: Database;
+    meta: DbMeta;
     message: Message;
     args: string[];
 }
@@ -19,13 +19,11 @@ export interface Command {
     name: string;
     aliases: string[];
 
-    admin: boolean;
-    beta: boolean;
-
     onlyGuild: boolean;
 
+    requiredRole: WuffyRoleEnum[];
     guildPermission: number[];
-    userPermission: number[];
+    userPermission: UserPermissions[];
 
     execute: CommandExecutor;
 }

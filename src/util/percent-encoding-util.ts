@@ -1,5 +1,3 @@
-import { Collection } from 'discord.js';
-
 export class PercentEncodingUtil {
 
     private static characters = new Map<RegExp, string>();

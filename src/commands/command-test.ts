@@ -1,20 +1,17 @@
 import { Command, CommandExecution } from './command';
-import { Permissions, Message } from 'discord.js';
-import { UserPermissions } from '../permission/user-permissions';
+import { Permissions, Message, RichEmbed } from 'discord.js';
+import { UserPermissions, PermissionCategory, PermissionType } from '../util/permission-enum';
+import { WuffyRoleEnum } from '../util/role-enum';
 
 export const command: Command = {
     name: 'Test',
     aliases: [ 'test' ],
-    admin: false,
-    beta: false,
     onlyGuild: true,
+    requiredRole: [ WuffyRoleEnum.Moderator ],
     guildPermission: [ Permissions.FLAGS.SEND_MESSAGES ],
-    userPermission: [ UserPermissions.UNKNOWN ],
+    userPermission: [ ],
 
-    async execute({ client, user, guild, message, database }: CommandExecution) {
+    async execute({ message, meta, args }: CommandExecution) {
         message.channel.sendMessage('Executing...');
-        message.channel.sendMessage(`Currently coins: ${guild.getCoins(100)}`);
-        guild.addCoins(100, 100);
-        message.channel.sendMessage(`Added 100 coins. Balance: ${guild.getCoins(100)}`);
     }
 };

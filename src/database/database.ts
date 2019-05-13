@@ -1,8 +1,11 @@
 import { ConfigDatabase } from '../../config';
-import mongoose from 'mongoose';
-
-export interface DatabaseConnect { }
-export interface DatabaseDisconnect { }
+import { DbGuild } from './database-guild';
+import { DbLanguage } from './database-language';
+import { DbUser } from './database-user';
+import { LanguageEnum, TranslationKeys } from '../util/language-enum';
+import { timingSafeEqual } from 'crypto';
+import { User, Guild, Message } from 'discord.js';
+import { Wuffy } from '../wuffy';
 
 export interface Database {
     connect(config: ConfigDatabase): void;
@@ -12,6 +15,7 @@ export interface Database {
 
     getUser(id: string): Promise<DbUser>;
     getGuild(id: string): Promise<DbGuild>;
+    getLanguage(id: LanguageEnum): Promise<DbLanguage>;
 }
 
 export interface DbBase {
@@ -32,75 +36,72 @@ export interface DbBase {
     getId(): string;
 }
 
-export interface DbUser extends DbBase {
-    /**
-     * Return user locale as string
-     * @param userId GuildId
-     * @returns User locale as string
-     */
-    getLocale(userId: number): string;
+export class DbMeta {
 
-    /**
-     * Set the user locale
-     * @param userId GuildId
-     * @param locale User locale as string
-     */
-    setLocale(userId: number, locale: string): void;
-}
+    constructor(public client: Wuffy, public db: Database, public user: User, public dbUser: DbUser, public guild?: Guild, public dbGuild?: DbGuild, public language?: DbLanguage) {
+        (this.user as any).meta = this;
+        (this.dbUser as any).meta = this;
 
-export interface DbGuild extends DbBase {
-    /**
-     * Return guild locale as string
-     * @param guildId GuildId
-     * @returns Guild locale as string
-     */
-    getLocale(): number;
+        if (this.language) (this.language as any).meta = this;
 
-    /**
-     * Set the guild locale
-     * @param guildId GuildId
-     * @param locale Locale as string
-     */
-    setLocale(locale: number): void;
+        if (this.guild) (this.guild as any).meta = this;
+        if (this.dbUser) (this.dbUser as any).meta = this;
 
-    /**
-     * Return user coins
-     * @param guildId GuildId
-     * @param userId  UserId
-     * @returns user coins
-     */
-    getCoins(userId: number): number;
+        return this;
+    }
 
-    /**
-     * Set user coins
-     * @param guildId GuildId
-     * @param userId  UserId
-     * @param coins Coins
-     */
-    setCoins(userId: number, coins: number): void;
+    async loadLanguage() {
+        if (this.dbUser.getLocale()) return this.setLanguage(await this.db.getLanguage(this.dbUser.getLocale()));
+        if (this.dbGuild.getLocale()) return this.setLanguage(await this.db.getLanguage(this.dbGuild.getLocale()));
+        return this.setLanguage(await this.db.getLanguage(LanguageEnum.ENGLISH));
+    }
 
-    /**
-     * Add user coins
-     * @param guildId GuildId
-     * @param userId  UserId
-     * @param coins Coins
-     */
-    addCoins(userId: number, coins: number): void;
+    setGuild(guild: Guild) {
+        if (this.guild) (this.guild as any).meta = undefined;
+        this.guild = guild;
+        (this.guild as any).meta = this;
+        return this;
+    }
 
-    /**
-     * Remove user coins
-     * @param guildId GuildId
-     * @param userId  UserId
-     * @param coins Coins
-     */
-    removeCoins(userId: number, coins: number): void;
+    setUser(user: User) {
+        if (this.user) (this.user as any).meta = undefined;
+        this.user = user;
+        (this.user as any).meta = this;
+        return this;
+    }
 
-    /**
-     * Return 0 when has enough coins or returning a higher number with the ammount what needed
-     * @param guildId GuildId
-     * @param userId  UserId
-     * @param coins Coins
-     * @returns 0 when has enough coins or returning a higher number with the ammount what needed
-     */
-    canRemoveCoins(userId: number, coins: number): number;
+    setDbUser(dbUser: DbUser) {
+        if (this.dbUser) (this.dbUser as any).meta = undefined;
+        this.dbUser = dbUser;
+        (this.dbUser as any).meta = this;
+        return this;
+    }
+
+    setDbGuild(dbGuild: DbGuild) {
+        if (this.dbGuild) (this.dbGuild as any).meta = undefined;
+        this.dbGuild = dbGuild;
+        (this.dbGuild as any).meta = this;
+        return this;
+    }
+
+    setLanguage(language: DbLanguage) {
+        if (this.language) (this.language as any).meta = undefined;
+        this.language = language;
+        (this.language as any).meta = this;
+        return this;
+    }
+
+    translate(key: TranslationKeys, ...replace: string[]) {
+        return this.language ? this.language.getTranslation(key, ...replace) : key;
+    }
+
+    finish() {
+        if (this.dbUser) this.dbUser.saveData();
+        if (this.dbGuild) this.dbGuild.saveData();
+        this.destroy();
+    }
+
+    destroy() {
+        this.db, this.user, this.dbUser, this.language, this.guild, this.dbGuild = undefined;
+    }
 }

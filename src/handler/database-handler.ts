@@ -1,4 +1,4 @@
-import { DbMongoDB } from '../database/mongodb/database-mongodb';
+import { DbMongoDB } from '../database/impl/mongodb/database-mongodb';
 import { Wuffy } from '../wuffy';
 
 interface DatabaseHandler {
