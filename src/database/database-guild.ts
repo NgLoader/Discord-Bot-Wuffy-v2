@@ -4,13 +4,12 @@ import { DbBase } from './database';
 import { DbUser } from './database-user';
 import { LanguageEnum } from '../util/language-enum';
 
-export interface DbGuild extends DbBase {
+export interface GuildSettings extends DbBase {
     /**
      * Return guild locale as string
      * @param guildId GuildId
      * @returns Guild locale as string
      */
-
     getLocale(): LanguageEnum;
     /**
      * Set the guild locale
@@ -48,6 +47,10 @@ export interface DbGuild extends DbBase {
      * @param prefix string
      */
     isPrefix(prefix: string): boolean;
+
+    getMentionCommandExecution(): boolean;
+
+    setMentionCommandExecution(value: boolean): void;
 
     /**
      * Return user coins

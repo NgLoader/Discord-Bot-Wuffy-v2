@@ -4,7 +4,7 @@ interface ReadyListener {
     (this: Wuffy): void;
 }
 
-export const ready: ReadyListener = function(this: Wuffy) {
+export const ready: ReadyListener = function() {
     if (this.shard === null) {
         console.info(`Wuffy is ready without sharding.`);
     } else {

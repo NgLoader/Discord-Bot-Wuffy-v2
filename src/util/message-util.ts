@@ -2,7 +2,7 @@ import { Message, Permissions, RichEmbed, Channel, RichEmbedOptions, User, Guild
 import { TranslationKeys, LanguageEnum } from './language-enum';
 import { Wuffy } from '../wuffy';
 import { DbUser } from '../database/database-user';
-import { DbGuild } from '../database/database-guild';
+import { GuildSettings } from '../database/database-guild';
 import { DbMeta } from '../database/database';
 
 export class MessageUtil {
@@ -12,7 +12,7 @@ export class MessageUtil {
 
         if (!locale) {
             if (message.guild != undefined && message.channel.type != 'dm' && (message as any).dbGuild != undefined) {
-                locale = (((message as any).dbGuild) as DbGuild).getLocale();
+                locale = (((message as any).dbGuild) as GuildSettings).getLocale();
             } else locale = LanguageEnum.ENGLISH;
         }
 
@@ -46,7 +46,7 @@ export class MessageUtil {
 
         if (!locale) {
             if (message.guild != undefined && message.channel.type != 'dm' && (message as any).dbGuild != undefined) {
-                locale = (((message as any).dbGuild) as DbGuild).getLocale();
+                locale = (((message as any).dbGuild) as GuildSettings).getLocale();
             } else locale = LanguageEnum.ENGLISH;
         }
 

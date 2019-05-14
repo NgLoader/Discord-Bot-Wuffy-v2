@@ -1,6 +1,6 @@
-import { Wuffy } from '../wuffy';
 import { message } from '../events/message';
 import { ready } from '../events/ready';
+import { Wuffy } from '../wuffy';
 
 interface EventHandler {
     (this: Wuffy): void;

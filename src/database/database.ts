@@ -1,5 +1,5 @@
 import { ConfigDatabase } from '../../config';
-import { DbGuild } from './database-guild';
+import { GuildSettings } from './database-guild';
 import { DbLanguage } from './database-language';
 import { DbUser } from './database-user';
 import { LanguageEnum, TranslationKeys } from '../util/language-enum';
@@ -14,7 +14,7 @@ export interface Database {
     isConnected(): boolean;
 
     getUser(id: string): Promise<DbUser>;
-    getGuild(id: string): Promise<DbGuild>;
+    getGuild(id: string): Promise<GuildSettings>;
     getLanguage(id: LanguageEnum): Promise<DbLanguage>;
 }
 
@@ -38,7 +38,7 @@ export interface DbBase {
 
 export class DbMeta {
 
-    constructor(public client: Wuffy, public db: Database, public user: User, public dbUser: DbUser, public guild?: Guild, public dbGuild?: DbGuild, public language?: DbLanguage) {
+    constructor(public client: Wuffy, public db: Database, public user: User, public dbUser: DbUser, public guild?: Guild, public dbGuild?: GuildSettings, public language?: DbLanguage) {
         (this.user as any).meta = this;
         (this.dbUser as any).meta = this;
 
@@ -77,7 +77,7 @@ export class DbMeta {
         return this;
     }
 
-    setDbGuild(dbGuild: DbGuild) {
+    setDbGuild(dbGuild: GuildSettings) {
         if (this.dbGuild) (this.dbGuild as any).meta = undefined;
         this.dbGuild = dbGuild;
         (this.dbGuild as any).meta = this;

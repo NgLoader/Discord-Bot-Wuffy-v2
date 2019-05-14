@@ -6,11 +6,14 @@ import { Database } from './database/database';
 import { commandHandler } from './handler/command-handler';
 import { databaseHandler } from './handler/database-handler';
 import { eventHandler } from './handler/event-handler';
+import { ModuleConstructor, Module } from './module/module.interface';
 
 export class Wuffy extends Client {
-    protected commands = new Map<string, Command>();
+    private modules = new Map<ModuleConstructor<Module>, Module>();
+
+    public commands = new Map<string, Command>();
     public database: Database;
-    protected config: Config;
+    public config: Config;
 
     /**
      * create a new bot instance
@@ -36,6 +39,10 @@ export class Wuffy extends Client {
         // Debug instance
         console.debug(this);
     }
+
+    get<T extends Module>(moduleConstructor: ModuleConstructor<T>): T {
+        return this.modules.get(moduleConstructor) as T;
+    }
 }
 
-new Wuffy(JSON.parse(fs.readFileSync('./config.json') as unknown as string));
+new Wuffy(JSON.parse(fs.readFileSync('./config.json') as any));

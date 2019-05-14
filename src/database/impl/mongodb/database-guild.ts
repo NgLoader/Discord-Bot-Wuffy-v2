@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { BitBuffer } from '../../../util/bit-buffer';
 import { PermissionCategory, PermissionCategoryValues, PermissionType, PermissionTypeValues, UserPermissions, UserPermissionValues } from '../../../util/permission-enum';
 import { WuffyRoleEnum } from '../../../util/role-enum';
-import { DbGuild } from '../../database-guild';
+import { GuildSettings } from '../../database-guild';
 import { DbUser } from '../../database-user';
 import { IMongoDBGuild } from './database-mongodb';
 
@@ -32,7 +32,7 @@ const mongodbChema = new mongoose.Schema({
     }
 });
 
-const methods: DbGuild = {
+const methods: GuildSettings = {
     /* Basic */
     loadData() { },
     saveData() {

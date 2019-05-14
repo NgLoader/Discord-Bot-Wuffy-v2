@@ -2,33 +2,36 @@ import { Message, Permissions, PermissionResolvable, Guild } from 'discord.js';
 import { Wuffy } from '../wuffy';
 import { MessageUtil } from '../util/message-util';
 import { PermissionUtil } from '../util/permission-util';
-import { WuffyRoleEnum } from '../util/role-enum';
 import { DbMeta } from '../database/database';
-import { LanguageEnum } from '../util/language-enum';
 
 interface MessageListener {
     (this: Wuffy, message: Message): void;
 }
 
-export const message: MessageListener = async function(this: Wuffy, message: Message) {
+export const message: MessageListener = async function(message: Message) {
     try {
-        if (message.author.bot) return;
+        if (message.author.bot)
+            return;
 
         const args: string[] = message.content.split(/\s+/);
 
-        if (args.length < 0) return;
+        if (args.length < 0)
+            return;
 
-        if (!this.database.isConnected()) return;
+        if (!this.database.isConnected())
+            return;
 
         let alias: string = args.shift();
 
-        if (!alias.startsWith(this.config.prefix)) return;
+        if (!alias.startsWith(this.config.prefix))
+            return;
 
         // TODO check mention
         alias = alias.substring(this.config.prefix.length, alias.length);
 
         if (alias.length == 0) {
-            if (args.length == 0) return;
+            if (args.length == 0)
+                return;
 
             alias = args.shift();
         }
@@ -37,7 +40,8 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
         const channelPermission = isGuild ? message.guild.me.permissionsIn(message.channel) : undefined;
         const meta = new DbMeta(this, this.database, message.author, await this.database.getUser(message.author.id));
 
-        if (isGuild) meta.setGuild(message.guild).setDbGuild(await this.database.getGuild(message.guild.id));
+        if (isGuild)
+            meta.setGuild(message.guild).setDbGuild(await this.database.getGuild(message.guild.id));
         meta.loadLanguage();
 
         (message as any).meta = meta;
@@ -49,7 +53,8 @@ export const message: MessageListener = async function(this: Wuffy, message: Mes
 
                 if (channelPermission.has(Permissions.FLAGS.MANAGE_MESSAGES))
                     await message.delete(5000);
-            } else message.react('❓');
+            } else
+                message.react('❓');
             return;
         }
 

@@ -3,7 +3,7 @@ import mongoose, { Connection, Mongoose } from 'mongoose';
 import { ConfigDatabase, ConfigDatabaseMongoDB } from '../../../../config';
 import { PercentEncodingUtil } from '../../../util/percent-encoding-util';
 import { Database } from '../../database';
-import { DbGuild } from '../../database-guild';
+import { GuildSettings } from '../../database-guild';
 import { DbLanguage } from '../../database-language';
 import { DbUser } from '../../database-user';
 import { MongoDBGuild } from './database-guild';
@@ -11,7 +11,7 @@ import { MongoDBLanguage } from './database-language';
 import { MongoDBUser } from './database-user';
 import { LanguageEnum } from '../../../util/language-enum';
 
-export interface IMongoDBGuild extends DbGuild, mongoose.Document { }
+export interface IMongoDBGuild extends GuildSettings, mongoose.Document { }
 export interface IMongoDBUser extends DbUser, mongoose.Document { }
 export interface IMongoDBLanguage extends DbLanguage, mongoose.Document { }
 
